@@ -2,6 +2,15 @@ provider "aws" {
   region                  = "ap-south-1"
   profile                 = "akhil"
 }
+resource "tls_private_key" "keypair" {
+  algorithm   = "RSA"
+}resource "local_file" "privatekey" {
+    content     = tls_private_key.keypair.private_key_pem
+    filename = "key1.pem"
+}resource "aws_key_pair" "deployer" {
+  key_name   = "key1.pem"
+  public_key = tls_private_key.keypair.public_key_openssh
+}
 resource "aws_default_vpc" "default" {
   tags = {
     Name = "Default VPC"
@@ -43,7 +52,7 @@ resource "aws_security_group" "secure-task" {
 resource "aws_instance" "job1" {
   ami           = "ami-0447a12f28fddb066"
   instance_type = "t2.micro"
-  key_name = "akhilkey"
+  key_name = tls_private_key.keypair.private_key_pem
   security_groups = ["secure-task"]
   tags = {
     Name = "job1"
@@ -52,7 +61,7 @@ resource "aws_instance" "job1" {
   type = "ssh"
   user = "ec2-user"
   host = aws_instance.job1.public_ip
-  private_key = file("F:/STUDY/PRACTICE/terraform/job1/akhilkey.pem")  
+  private_key = tls_private_key.keypair.private_key_pem  
   }
   provisioner "remote-exec" {
     inline = [
@@ -90,7 +99,7 @@ depends_on = [
   connection {
     type     = "ssh"
     user     = "ec2-user"
-    private_key = file("F:/STUDY/PRACTICE/terraform/job1/akhilkey.pem")
+    private_key = tls_private_key.keypair.private_key_pem
     host     = aws_instance.job1.public_ip
   }
 
@@ -111,7 +120,7 @@ resource "aws_s3_bucket" "bucket-first-task" {
 resource "aws_s3_bucket_object" "image-upload" {
   bucket = "bucket-for-webserver"
   key    = "first-img.jpeg"
-  source = "skillset.jpg"
+  source = filemd5("F:/STUDY/PRACTICE/terraform/job1/skillset.jpg")
   acl = "public-read"
 }
 
@@ -119,8 +128,11 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   origin {
        domain_name = aws_s3_bucket.bucket-first-task.bucket_regional_domain_name
        origin_id   = "S3-${aws_s3_bucket.bucket-first-task.bucket}"
- 
+  s3_origin_config {
+      origin_access_identity = "aws_cloudfront_origin_access_identity.origin_access_identity.cloudfront_access_identity_path"
+                   }
          }
+  
   enabled             = true
   is_ipv6_enabled     = true
   default_root_object = "index.html"
@@ -157,10 +169,9 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   user = "ec2-user"
   host = aws_instance.job1.public_ip
   port = 22
-  private_key = file("F:/STUDY/PRACTICE/terraform/job1/akhilkey.pem")  
+  private_key = tls_private_key.keypair.private_key_pem
   }
 }
-
 resource "null_resource" "nulllocal1"  {
 depends_on = [
     null_resource.nullremote3,
