@@ -159,23 +159,13 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   port = 22
   private_key = file("F:/STUDY/PRACTICE/terraform/job1/akhilkey.pem")  
   }
-  # provisioner "remote-exec" {
-  #   inline = [
-  #   # sudo su << \"EOF" \n echo \"<img src ='${self.domain_name}'>\" >> /var/www/html/test.html \n \"EOF\"""
-  #     "sudo su << EOF"
-  #     "echo \"<img src=''>\" >> /var/www/html/test.html","EOF"
-  #   ]
-  # }
 }
 
-# resource "null_resource" "nulllocal1"  {
-# depends_on = [
-#     null_resource.nullremote3,
-#   ]
-# 	provisioner "local-exec" {
-# 	    command = "chrome  ${aws_instance.job1.public_ip}"
-#   	}
-#}
-output "op" {
-  value = "aws_s3_bucket.bucket-first-task.bucket"
+resource "null_resource" "nulllocal1"  {
+depends_on = [
+    null_resource.nullremote3,
+  ]
+	provisioner "local-exec" {
+	    command = "chrome  ${aws_instance.job1.public_ip}"
+  	}
 }
