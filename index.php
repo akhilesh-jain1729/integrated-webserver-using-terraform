@@ -5,4 +5,3 @@ This is from CloudFront URL
 <img src = 'd1j9g0bdmezlm0.cloudfront.net/cloudfront.png' width ='200' height ='200' />
 
 
-# instead of S3 object url - give Cloudfront domain 
